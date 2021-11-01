@@ -1,8 +1,11 @@
 package cortex
 
 import (
+	"github.com/grafana/cortex-tools/pkg/rules"
+	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"gopkg.in/yaml.v3"
+	"log"
 )
 
 func formatYAML(input string) (string, error) {
@@ -28,4 +31,29 @@ func suppressYAMLDiff(k, old, new string, d *schema.ResourceData) bool {
 		return false
 	}
 	return olds == news
+}
+
+func suppressRuleGroupDiff(_, old, new string, _ *schema.ResourceData) bool {
+	log.Println("[DEBUG] DiffSuppressFunc")
+	oldRG := rwrulefmt.RuleGroup{}
+	err := yaml.Unmarshal([]byte(old), &oldRG)
+	if err != nil {
+		log.Printf("[DEBUG] Error parsing old:\n\t%s\n", err)
+		log.Printf("[DEBUG] Old value\n%s\n", old)
+
+	}
+	newRG := rwrulefmt.RuleGroup{}
+	err = yaml.Unmarshal([]byte(new), &newRG)
+	if err != nil {
+		log.Printf("[DEBUG] Error parsing new:\n\t%s\n", err)
+		log.Printf("[DEBUG] New value\n%s\n", old)
+
+	}
+	log.Println("[DEBUG] Diffing")
+	err = rules.CompareGroups(oldRG, newRG)
+	if err != nil {
+		log.Printf("[DEBUG] Diff error:\n\t%s\n", err.Error())
+		return false
+	}
+	return true
 }

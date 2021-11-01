@@ -10,7 +10,7 @@ import (
 
 func resourceAlertmanager() *schema.Resource {
 	return &schema.Resource{
-		Description:   "This alermanager resource enables you to manage Alertmanger configuration in Cortex.",
+		Description:   "This alertmanager resource enables you to manage Alertmanager configuration in Cortex.",
 		CreateContext: resourceAlertsCreate,
 		ReadContext:   resourceAlertsRead,
 		// Updates use the same API as create.
@@ -25,7 +25,7 @@ func resourceAlertmanager() *schema.Resource {
 			},
 			"alertmanager_config": &schema.Schema{
 				Type:        schema.TypeString,
-				Description: "Content of the alertmanager configuration.",
+				Description: "Content of the Alertmanager configuration.",
 				Required:    true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					olds, err := formatYAML(old)
@@ -82,6 +82,7 @@ func resourceAlertsCreate(ctx context.Context, d *schema.ResourceData, m interfa
 
 	d.SetId(fmt.Sprintf("alertmanager%s", tenantID))
 
+	resourceAlertsRead(ctx, d, m)
 	return diags
 }
 
@@ -89,7 +90,6 @@ func resourceAlertsDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	var (
 		c        = m.(cortexClientFunc)
 		tenantID string
-		diags    diag.Diagnostics
 	)
 
 	if data, ok := d.GetOk("tenant_id"); ok {
@@ -108,7 +108,7 @@ func resourceAlertsDelete(ctx context.Context, d *schema.ResourceData, m interfa
 
 	d.SetId("")
 
-	return diags
+	return resourceAlertsRead(ctx, d, m)
 }
 
 func resourceAlertsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

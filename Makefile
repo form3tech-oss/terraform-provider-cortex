@@ -1,10 +1,11 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
 HOSTNAME=registry.terraform.io
-NAMESPACE=inuits
+NAMESPACE=form3tech-oss
 NAME=cortex
 BINARY=terraform-provider-${NAME}
-VERSION=0.0.3
-OS_ARCH=darwin_amd64
+VERSION=0.0.5
+OS_ARCH=linux_amd64
+PROJECT_NAME ?= $(CURDIR)
 
 default: install
 
@@ -12,18 +13,7 @@ build:
 	go build -o ${BINARY}
 
 release:
-	GOOS=darwin GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_darwin_amd64
-	GOOS=freebsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_freebsd_386
-	GOOS=freebsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_freebsd_amd64
-	GOOS=freebsd GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_freebsd_arm
-	GOOS=linux GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_linux_386
-	GOOS=linux GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_linux_amd64
-	GOOS=linux GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_linux_arm
-	GOOS=openbsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_openbsd_386
-	GOOS=openbsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_openbsd_amd64
-	GOOS=solaris GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_solaris_amd64
-	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386
-	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
+	goreleaser
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
@@ -35,3 +25,21 @@ test:
 
 testacc: 
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m   
+
+dev.tfrc:
+	echo 'provider_installation {' >> dev.tfrc
+	echo '  dev_overrides {' >> dev.tfrc
+	echo '    "form3tech-oss/cortex" = "$(CURDIR)"' >> dev.tfrc
+	echo '  }' >> dev.tfrc
+	echo '  direct {}' >> dev.tfrc
+	echo '}' >> dev.tfrc
+
+.PHONY: deps
+deps: bin/goreleaser
+
+bin/goreleaser:
+	mkdir -p bin
+	wget https://github.com/goreleaser/goreleaser/releases/download/v0.164.0/goreleaser_Linux_x86_64.tar.gz
+	tar -C bin -xzf goreleaser*tar.gz goreleaser
+	rm goreleaser*tar.gz*
+
