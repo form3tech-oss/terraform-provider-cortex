@@ -48,7 +48,6 @@ func resourceRulesCreate(ctx context.Context, d *schema.ResourceData, m interfac
 		namespace = d.Get("namespace").(string)
 		content   = d.Get("content").(string)
 		tenantID  string
-		diags     diag.Diagnostics
 	)
 
 	if data, ok := d.GetOk("tenant_id"); ok {
@@ -77,8 +76,7 @@ func resourceRulesCreate(ctx context.Context, d *schema.ResourceData, m interfac
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", rg.Name, namespace, tenantID))
 
-	resourceRulesRead(ctx, d, m)
-	return diags
+	return resourceRulesRead(ctx, d, m)
 }
 
 func resourceRulesDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -87,7 +85,6 @@ func resourceRulesDelete(ctx context.Context, d *schema.ResourceData, m interfac
 		namespace = d.Get("namespace").(string)
 		groupName = strings.Split(d.Id(), "/")[0]
 		tenantID  string
-		diags     diag.Diagnostics
 	)
 
 	if data, ok := d.GetOk("tenant_id"); ok {
@@ -106,7 +103,7 @@ func resourceRulesDelete(ctx context.Context, d *schema.ResourceData, m interfac
 
 	d.SetId("")
 
-	return diags
+	return resourceRulesRead(ctx, d, m)
 }
 
 func resourceRulesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

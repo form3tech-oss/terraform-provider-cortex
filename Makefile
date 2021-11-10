@@ -1,30 +1,66 @@
+include Makefile.deps
+
 TEST?=$$(go list ./... | grep -v 'vendor')
 HOSTNAME=registry.terraform.io
 NAMESPACE=form3tech-oss
 NAME=cortex
 BINARY=terraform-provider-${NAME}
-VERSION=0.0.5
+VERSION=0.0.4
 OS_ARCH=linux_amd64
-PROJECT_NAME ?= $(CURDIR)
+PATH := $(PATH):$(PWD)/bin
+SHELL := /bin/bash
 
 default: install
 
+.PHONY: build
 build:
 	go build -o ${BINARY}
 
+.PHONY: release
 release:
 	goreleaser
 
+.PHONY: install
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
+.PHONY: test
 test: 
-	go test -i $(TEST) || exit 1                                                   
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4                    
+	go test -v ./...
 
+.PHONY: testacc
 testacc: 
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m   
+
+.PHONY: clean
+clean:
+	rm -f examples/terraform.tfstate
+	rm -f examples/terraform.tfstate.backup
+
+.PHONY: lint
+lint: vet tflint tffmtcheck
+
+.PHONY: vet
+vet:
+	go vet ./...
+
+.PHONY: tflint
+tflint:
+	find ./examples/ -type d -exec tflint \{\} \;
+
+.PHONY: tffmtcheck
+tffmtcheck:
+	terraform fmt -check -recursive ./examples/
+
+.PHONY: fmt
+fmt:
+	go fmt ./...
+	terraform fmt -recursive ./examples/
+
+.PHONY: docs
+docs:
+	tfplugindocs generate
 
 dev.tfrc:
 	echo 'provider_installation {' >> dev.tfrc
@@ -34,12 +70,10 @@ dev.tfrc:
 	echo '  direct {}' >> dev.tfrc
 	echo '}' >> dev.tfrc
 
-.PHONY: deps
-deps: bin/goreleaser
+.PHONY: cortex-up
+cortex-up:
+	docker-compose up -d
 
-bin/goreleaser:
-	mkdir -p bin
-	wget https://github.com/goreleaser/goreleaser/releases/download/v0.164.0/goreleaser_Linux_x86_64.tar.gz
-	tar -C bin -xzf goreleaser*tar.gz goreleaser
-	rm goreleaser*tar.gz*
-
+.PHONY: cortex-down
+cortex-down:
+	docker-compose down

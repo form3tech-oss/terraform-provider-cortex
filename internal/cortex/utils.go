@@ -21,7 +21,7 @@ func formatYAML(input string) (string, error) {
 	return string(out), nil
 }
 
-func suppressYAMLDiff(k, old, new string, d *schema.ResourceData) bool {
+func suppressYAMLDiff(_, old, new string, _ *schema.ResourceData) bool {
 	olds, err := formatYAML(old)
 	if err != nil {
 		return false
@@ -40,16 +40,13 @@ func suppressRuleGroupDiff(_, old, new string, _ *schema.ResourceData) bool {
 	if err != nil {
 		log.Printf("[DEBUG] Error parsing old:\n\t%s\n", err)
 		log.Printf("[DEBUG] Old value\n%s\n", old)
-
 	}
 	newRG := rwrulefmt.RuleGroup{}
 	err = yaml.Unmarshal([]byte(new), &newRG)
 	if err != nil {
 		log.Printf("[DEBUG] Error parsing new:\n\t%s\n", err)
 		log.Printf("[DEBUG] New value\n%s\n", old)
-
 	}
-	log.Println("[DEBUG] Diffing")
 	err = rules.CompareGroups(oldRG, newRG)
 	if err != nil {
 		log.Printf("[DEBUG] Diff error:\n\t%s\n", err.Error())

@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     cortex = {
-      version = "0.0.5"
+      version = "0.0.4"
       source  = "form3tech-oss/cortex"
     }
   }
