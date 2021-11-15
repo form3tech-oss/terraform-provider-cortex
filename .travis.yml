@@ -4,9 +4,11 @@ dist: focal
 go:
   - 1.16.x
 script:
-  - make deps testacc lint
+  - make lint
+  - make test
+  - make testacc
 deploy:
   - provider: script
-    script: make deps release
+    script: make release
     on:
       tags: true

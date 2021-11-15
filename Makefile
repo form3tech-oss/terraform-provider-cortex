@@ -17,7 +17,7 @@ build:
 	go build -o ${BINARY}
 
 .PHONY: release
-release:
+release: deps
 	goreleaser
 
 .PHONY: install
@@ -30,7 +30,7 @@ test:
 	go test -v ./...
 
 .PHONY: testacc
-testacc: 
+testacc: deps
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m   
 
 .PHONY: clean
@@ -46,20 +46,20 @@ vet:
 	go vet ./...
 
 .PHONY: tflint
-tflint:
+tflint: deps
 	find ./examples/ -type d -exec tflint \{\} \;
 
 .PHONY: tffmtcheck
-tffmtcheck:
+tffmtcheck: deps
 	terraform fmt -check -recursive ./examples/
 
 .PHONY: fmt
-fmt:
+fmt: deps
 	go fmt ./...
 	terraform fmt -recursive ./examples/
 
 .PHONY: docs
-docs:
+docs: deps
 	tfplugindocs generate
 
 dev.tfrc:
