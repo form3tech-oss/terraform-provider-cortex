@@ -9,6 +9,6 @@ script:
   - make testacc
 deploy:
   - provider: script
-    script: make release
+    script: make gorelease
     on:
       tags: true
