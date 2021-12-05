@@ -7,7 +7,9 @@ script:
   - make lint
   - make goreleaser-build
   - make test
+  - make cortex-up
   - make testacc
+  - make cortex-down
 deploy:
   - provider: script
     script: make goreleaser-release
