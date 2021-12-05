@@ -22,12 +22,11 @@ func TestAccRule_Basic(t *testing.T) {
         resourceId = "cortex_rules.watchdog"
     )
 
-    ruleContent :=  `
-name: watchdog
+    ruleContent :=  `name: watchdog
 rules:
-- alert: %s
-expr: vector(1)
-for: 20m`
+- alert: watchdog
+  expr: vector(1)
+  for: 20m`
     ruleConfig := testRuleConfig(resourceName, ruleContent)
 
     resource.Test(t, resource.TestCase{
@@ -49,8 +48,7 @@ for: 20m`
 }
 
 func TestAccRule_YAMLFormatCausesNoChanges(t *testing.T) {
-    ruleContent := `
-name: watchdog
+    ruleContent := `name: watchdog
 rules:
 - alert: watchdog
   expr: vector(1)
