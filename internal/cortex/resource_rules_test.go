@@ -3,7 +3,6 @@ package cortex
 import (
     "context"
     "fmt"
-    "gopkg.in/yaml.v3"
     "strings"
     "testing"
 
@@ -13,6 +12,7 @@ import (
     "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
     "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
     "github.com/stretchr/testify/require"
+    "gopkg.in/yaml.v3"
 )
 
 func TestAccRule_Basic(t *testing.T) {

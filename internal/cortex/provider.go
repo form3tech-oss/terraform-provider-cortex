@@ -27,7 +27,7 @@ import (
 const (
     EnvCortexAddress  = "CORTEX_ADDRESS"
     EnvCortexApiKey   = "CORTEX_API_KEY"
-	EnvCortexTenantId = "CORTEX_TENANT_ID"
+    EnvCortexTenantId = "CORTEX_TENANT_ID"
 )
 
 // Provider -
