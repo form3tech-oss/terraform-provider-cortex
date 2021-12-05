@@ -126,7 +126,7 @@ func testAccCheckResourceContent(resourceName, wantContent string) resource.Test
 
         err = rules.CompareGroups(*gotRg, *wantRg)
         if err != nil {
-            return fmt.Errorf("unexpected rule group content. want: %v got: %v", wantRg, gotRg)
+            return fmt.Errorf("unexpected rule group content: %w", err)
         }
         return nil
     }
@@ -181,7 +181,7 @@ func testAccCheckRuleGroupAttrContent(gotRg *rwrulefmt.RuleGroup, wantContent st
 
         err = rules.CompareGroups(*gotRg, *wantRg)
         if err != nil {
-            return fmt.Errorf("unexpected rule group content. want: %v got: %v", wantRg, gotRg)
+            return fmt.Errorf("unexpected rule group content: %w", err)
         }
 
         return nil
