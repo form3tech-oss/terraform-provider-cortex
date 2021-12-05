@@ -98,7 +98,7 @@ func testAccPreCheck(t *testing.T, namespace, name string) {
     require.NoError(t, err)
 
     rg, err := cortexClient.GetRuleGroup(context.Background(), namespace, name)
-    require.Error(t, err, "requested resource not found")
+    require.EqualError(t, err, "requested resource not found", fmt.Sprintf("test precondition failed: rule group '%s/%s' already exists", namespace, name))
     require.Nil(t, rg)
 }
 
