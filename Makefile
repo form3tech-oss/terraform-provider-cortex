@@ -48,7 +48,7 @@ test:
 	go test -v ./...
 
 .PHONY: testacc
-testacc:
+testacc: deps
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m   
 
 .PHONY: clean
