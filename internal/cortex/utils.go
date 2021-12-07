@@ -4,6 +4,7 @@ import (
 	"github.com/grafana/cortex-tools/pkg/rules"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/prometheus/prometheus/promql"
 	"gopkg.in/yaml.v3"
 	"log"
 )
@@ -47,6 +48,22 @@ func suppressRuleGroupDiff(_, old, new string, _ *schema.ResourceData) bool {
 		log.Printf("[DEBUG] Error parsing new:\n\t%s\n", err)
 		log.Printf("[DEBUG] New value\n%s\n", old)
 	}
+
+	oldExpr, err := promql.ParseExpr(oldRG.Rules[0].Expr.Value)
+	if err != nil {
+		log.Printf("[ERROR] Error parsing expression:\n\t%v\n", err)
+		return false
+	}
+	oldRG.Rules[0].Expr.Value = oldExpr.String()
+
+	newExpr, err := promql.ParseExpr(newRG.Rules[0].Expr.Value)
+	if err != nil {
+		log.Printf("[ERROR] Error parsing expression:\n\t%v\n", err)
+		return false
+	}
+	newRG.Rules[0].Expr.Value = newExpr.String()
+
+
 	err = rules.CompareGroups(oldRG, newRG)
 	if err != nil {
 		log.Printf("[DEBUG] Diff error:\n\t%s\n", err.Error())
