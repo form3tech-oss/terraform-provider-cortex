@@ -80,6 +80,32 @@ rules:
     })
 }
 
+func TestAccRule_MultiLineExpression(t *testing.T) {
+    ruleContent := `name: watchdog
+rules:
+- alert: watchdog
+  expr: >
+      series_a or on (label)
+          (
+            series_b
+          )`
+    ruleConfig := testRuleConfig("watchdog", ruleContent)
+
+    resource.Test(t, resource.TestCase{
+        ProviderFactories: testAccProviderFactories,
+        PreCheck: func() { testAccPreCheck(t, "default", "watchdog") },
+        Steps: []resource.TestStep{
+            {
+                Config: ruleConfig,
+            },
+            {
+                Config: ruleConfig,
+                PlanOnly: true,
+            },
+        },
+    })
+}
+
 func testRuleConfig(name, content string) string {
     return fmt.Sprintf(`
 resource "cortex_rules" "%s" {
