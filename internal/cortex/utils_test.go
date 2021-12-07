@@ -76,6 +76,37 @@ rules:
       Some description
       Link https://github.com
 `
+
+	ruleGroupYAMLWithMultiLineExpr := `name: test
+rules:
+- alert: test
+  expr: >
+    series_a or on (label)
+      (series_b)`
+
+	ruleGroupYAMLWithSingleLineExpr := `name: test
+rules:
+- alert: test
+  expr: series_a or on (label) (series_b)`
+
+	ruleGroupYAMLWithMultipleMultiLineExpr := `name: test
+rules:
+- alert: test1
+  expr: >
+    series_a or on (label)
+      (series_b)
+- alert: test2
+  expr: >
+    series_a or on (label)
+      (series_b)`
+
+	ruleGroupYAMLWithMultipleSingleLineExpr := `name: test
+rules:
+- alert: test1
+  expr: series_a or on (label) (series_b)
+- alert: test2
+  expr: series_a or on (label) (series_b)`
+
 	tests := []struct {
 		name             string
 		oldValue         string
@@ -84,6 +115,8 @@ rules:
 	}{
 		{"boolean vs string equivalent", `some_bool: true`, `some_bool: "true"`, true},
 		{"RuleGroup with boolean as boolean vs RuleGroup with boolean as string", ruleGroupYAMLWithBooleanAsBoolean, ruleGroupYAMLWithBooleanAsString, true},
+		{"RuleGroup with equal rule expressions with different format", ruleGroupYAMLWithMultiLineExpr, ruleGroupYAMLWithSingleLineExpr, true},
+		{"RuleGroup with multiple equal rule expressions with different formats", ruleGroupYAMLWithMultipleMultiLineExpr, ruleGroupYAMLWithMultipleSingleLineExpr, true},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
