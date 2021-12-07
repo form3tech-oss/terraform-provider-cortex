@@ -1,0 +1,6 @@
+name: test
+rules:
+  - alert: test
+    expr: >
+      series_a or on (label)
+        (series_b)

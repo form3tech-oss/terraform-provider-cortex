@@ -1,6 +1,7 @@
 package cortex
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -46,81 +47,46 @@ group_wait:      30s
 }
 
 func TestSuppressRuleGroupDiff(t *testing.T) {
-	ruleGroupYAMLWithBooleanAsBoolean := `name: test
-rules:
-- alert: test
-  expr: 'test > 0'
-  labels:
-    test_1: true
-    severity: critical
-    team: platform
-  annotations:
-    title: 'some title'
-    summary: 'some summary'
-    description: |-
-      Some description
-      Link https://github.com
-`
-	ruleGroupYAMLWithBooleanAsString := `name: test
-rules:
-- alert: test
-  expr: 'test > 0'
-  labels:
-    test_1: "true"
-    severity: critical
-    team: platform
-  annotations:
-    title: 'some title'
-    summary: 'some summary'
-    description: |-
-      Some description
-      Link https://github.com
-`
-
-	ruleGroupYAMLWithMultiLineExpr := `name: test
-rules:
-- alert: test
-  expr: >
-    series_a or on (label)
-      (series_b)`
-
-	ruleGroupYAMLWithSingleLineExpr := `name: test
-rules:
-- alert: test
-  expr: series_a or on (label) (series_b)`
-
-	ruleGroupYAMLWithMultipleMultiLineExpr := `name: test
-rules:
-- alert: test1
-  expr: >
-    series_a or on (label)
-      (series_b)
-- alert: test2
-  expr: >
-    series_a or on (label)
-      (series_b)`
-
-	ruleGroupYAMLWithMultipleSingleLineExpr := `name: test
-rules:
-- alert: test1
-  expr: series_a or on (label) (series_b)
-- alert: test2
-  expr: series_a or on (label) (series_b)`
-
 	tests := []struct {
 		name             string
-		oldValue         string
-		newValue         string
+		oldValuePath     string
+		newValuePath     string
 		expectedSuppress bool
 	}{
-		{"boolean vs string equivalent", `some_bool: true`, `some_bool: "true"`, true},
-		{"RuleGroup with boolean as boolean vs RuleGroup with boolean as string", ruleGroupYAMLWithBooleanAsBoolean, ruleGroupYAMLWithBooleanAsString, true},
-		{"RuleGroup with equal rule expressions with different format", ruleGroupYAMLWithMultiLineExpr, ruleGroupYAMLWithSingleLineExpr, true},
-		{"RuleGroup with multiple equal rule expressions with different formats", ruleGroupYAMLWithMultipleMultiLineExpr, ruleGroupYAMLWithMultipleSingleLineExpr, true},
+		{
+			"boolean vs string equivalent",
+			`./testdata/unquoted_bool.yaml`,
+			`./testdata/quoted_bool.yaml`,
+			true,
+		},
+		{
+			"RuleGroup with boolean as boolean vs RuleGroup with boolean as string",
+			"./testdata/rule_group_with_quoted_boolean.yaml",
+			"./testdata/rule_group_with_quoted_boolean.yaml",
+			true,
+		},
+		{
+			"RuleGroup with equal rule expressions with different format",
+			"./testdata/rule_group_with_single_multi_line_expression.yaml",
+			"./testdata/rule_group_with_single_line_expression.yaml",
+			true,
+		},
+		{
+			"RuleGroup with multiple equal rule expressions with different formats",
+			"./testdata/rule_group_with_multiple_multi_line_expressions.yaml",
+			"./testdata/rule_group_with_multiple_single_line_expressions.yaml",
+			true,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.Equal(t, test.expectedSuppress, suppressRuleGroupDiff("", test.oldValue, test.newValue, nil))
+			oldValue, err := os.ReadFile(test.oldValuePath)
+			require.NoError(t, err)
+
+			newValue, err := os.ReadFile(test.newValuePath)
+			require.NoError(t, err)
+
+			require.Equal(t, test.expectedSuppress, suppressRuleGroupDiff("", string(oldValue), string(newValue), nil))
 		})
 	}
 }
