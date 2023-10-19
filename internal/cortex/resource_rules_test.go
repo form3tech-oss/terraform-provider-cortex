@@ -80,6 +80,80 @@ rules:
     })
 }
 
+func TestAccRule_MultiLineExpression(t *testing.T) {
+    ruleContent := `name: watchdog
+rules:
+- alert: watchdog
+  expr: >
+      series_a or on (label)
+          (
+            series_b
+          )`
+    ruleConfig := testRuleConfig("watchdog", ruleContent)
+
+    resource.Test(t, resource.TestCase{
+        ProviderFactories: testAccProviderFactories,
+        PreCheck: func() { testAccPreCheck(t, "default", "watchdog") },
+        Steps: []resource.TestStep{
+            {
+                Config: ruleConfig,
+            },
+            {
+                Config: ruleConfig,
+                PlanOnly: true,
+            },
+        },
+    })
+}
+
+func TestAccRule_ExpressionFormattingChangesAreApplied(t *testing.T) {
+    var (
+        ruleGroup rwrulefmt.RuleGroup
+        resourceId = "cortex_rules.watchdog"
+    )
+
+    // multiLineRuleContent is formatted identically to the alert returned from the Cortex API for easier assertion.
+    multiLineRuleContent := `name: watchdog
+rules:
+- alert: watchdog
+  expr: |
+      series_a or on (label) (
+        series_b
+      )
+`
+    multiLineRuleCfg := testRuleConfig("watchdog", multiLineRuleContent)
+
+    // singleLineRuleContent is formatted identically to the alert returned from the Cortex API for easier assertion.
+    singleLineRuleContent := `name: watchdog
+rules:
+- alert: watchdog
+  expr: series_a or on (label) (series_b)`
+    singleLineRuleCfg := testRuleConfig("watchdog", singleLineRuleContent)
+
+    resource.Test(t, resource.TestCase{
+        ProviderFactories: testAccProviderFactories,
+        PreCheck: func() { testAccPreCheck(t, "default", "watchdog") },
+        Steps: []resource.TestStep{
+            {
+                Config: multiLineRuleCfg,
+                Check: resource.ComposeTestCheckFunc(
+                    testAccCheckResourceContent(resourceId, multiLineRuleContent),
+                    testAccCheckRuleGroupExists(resourceId, &ruleGroup),
+                    testAccCheckRuleGroupAttrContent(&ruleGroup, multiLineRuleContent),
+                ),
+            },
+            {
+                Config: singleLineRuleCfg,
+                Check: resource.ComposeTestCheckFunc(
+                    testAccCheckResourceContent(resourceId, singleLineRuleContent),
+                    testAccCheckRuleGroupExists(resourceId, &ruleGroup),
+                    testAccCheckRuleGroupAttrContent(&ruleGroup, singleLineRuleContent),
+                ),
+            },
+        },
+    })
+}
+
 func testRuleConfig(name, content string) string {
     return fmt.Sprintf(`
 resource "cortex_rules" "%s" {
